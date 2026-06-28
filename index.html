@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Votes For Prints</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #fff;
-      color: #1a1a1a;
+   body {
+      font-family: 'Courier New', Courier, monospace;
+      background: #000000;
+      color: #e0e0e0;
       padding: 24px 16px 40px;
     }
 
@@ -18,11 +18,12 @@
       font-size: 20px;
       font-weight: 600;
       margin-bottom: 6px;
+      color: #ffffff;
     }
 
     .subtitle {
       font-size: 14px;
-      color: #666;
+      color: #999;
       margin-bottom: 28px;
     }
 
@@ -33,10 +34,10 @@
     }
 
     .card {
-      border: 1px solid #e5e5e5;
+      border: 1px solid #2a2a2a;
       border-radius: 10px;
       overflow: hidden;
-      background: #fff;
+      background: #111111;
     }
 
     .card img {
@@ -53,7 +54,7 @@
     .card-title {
       font-size: 13px;
       font-weight: 500;
-      color: #333;
+      color: #cccccc;
       margin-bottom: 10px;
     }
 
@@ -66,7 +67,7 @@
     .star {
       font-size: 24px;
       cursor: pointer;
-      color: #ddd;
+      color: #444;
       transition: color 0.1s;
       user-select: none;
       line-height: 1;
@@ -76,20 +77,20 @@
     .star:hover  { color: #f59e0b; }
 
     .stars:hover .star { color: #f59e0b; }
-    .stars:hover .star ~ .star { color: #ddd; }
+    .stars:hover .star ~ .star { color: #444; }
 
     .vote-status {
       font-size: 12px;
-      color: #888;
+      color: #777;
       min-height: 18px;
     }
 
-    .vote-status.success { color: #16a34a; }
-    .vote-status.error   { color: #dc2626; }
+    .vote-status.success { color: #4ade80; }
+    .vote-status.error   { color: #f87171; }
 
     .avg-display {
       font-size: 12px;
-      color: #999;
+      color: #666;
       margin-top: 4px;
     }
 
@@ -97,7 +98,7 @@
       display: inline-block;
       margin-top: 32px;
       font-size: 13px;
-      color: #555;
+      color: #888;
       text-decoration: underline;
       cursor: pointer;
       background: none;
@@ -108,7 +109,7 @@
     #results-panel {
       display: none;
       margin-top: 24px;
-      border-top: 1px solid #e5e5e5;
+      border-top: 1px solid #2a2a2a;
       padding-top: 20px;
     }
 
@@ -116,6 +117,7 @@
       font-size: 16px;
       font-weight: 600;
       margin-bottom: 14px;
+      color: #ffffff;
     }
 
     .result-row {
@@ -131,12 +133,12 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      color: #444;
+      color: #aaa;
     }
 
     .result-bar-wrap {
       flex: 1;
-      background: #f0f0f0;
+      background: #222;
       border-radius: 4px;
       height: 8px;
       overflow: hidden;
@@ -153,7 +155,7 @@
       width: 36px;
       text-align: right;
       font-weight: 500;
-      color: #333;
+      color: #ccc;
     }
   </style>
 </head>
