@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Votes For Prints</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #fff;
+      color: #1a1a1a;
+      padding: 24px 16px 40px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 28px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      border: 1px solid #e5e5e5;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .card img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-body {
+      padding: 12px 14px 14px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .stars {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .star {
+      font-size: 24px;
+      cursor: pointer;
+      color: #ddd;
+      transition: color 0.1s;
+      user-select: none;
+      line-height: 1;
+    }
+
+    .star.filled { color: #f59e0b; }
+    .star:hover  { color: #f59e0b; }
+
+    .stars:hover .star { color: #f59e0b; }
+    .stars:hover .star ~ .star { color: #ddd; }
+
+    .vote-status {
+      font-size: 12px;
+      color: #888;
+      min-height: 18px;
+    }
+
+    .vote-status.success { color: #16a34a; }
+    .vote-status.error   { color: #dc2626; }
+
+    .avg-display {
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
+
+    .results-link {
+      display: inline-block;
+      margin-top: 32px;
+      font-size: 13px;
+      color: #555;
+      text-decoration: underline;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    #results-panel {
+      display: none;
+      margin-top: 24px;
+      border-top: 1px solid #e5e5e5;
+      padding-top: 20px;
+    }
+
+    #results-panel h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .result-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .result-label {
+      width: 140px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #444;
+    }
+
+    .result-bar-wrap {
+      flex: 1;
+      background: #f0f0f0;
+      border-radius: 4px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .result-bar {
+      height: 100%;
+      background: #f59e0b;
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+
+    .result-score {
+      width: 36px;
+      text-align: right;
+      font-weight: 500;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Which of these Photos Deserve to be Printed?</h1>
+  <p class="subtitle">Rate each image 1–5 stars. Your votes help decide which will be made available as prints!</p>
+
+  <div class="grid" id="grid"></div>
+
+  <button class="results-link" onclick="toggleResults()">Show current results</button>
+
+  <div id="results-panel">
+    <h2>Current standings</h2>
+    <div id="results-list"></div>
+  </div>
+
+  <script>
+    // ─────────────────────────────────────────────
+    // CONFIGURATION — fill these in before uploading
+    // ─────────────────────────────────────────────
+
+    const SUPABASE_URL = 'https://doqpuzbedngssndywfrw.supabase.co';   // from Supabase → Project Settings → API
+    const SUPABASE_ANON_KEY = 'sb_publishable_H7iaUFgNudohTcpvoGD2AQ_9nS49sJo';                 // from Supabase → Project Settings → API
+
+    const IMAGES = [
+      { id: 'photo-01', title: 'AUTUMN', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/autumn-border-high-2f5qyo.jpg' },
+      { id: 'photo-02', title: 'BROADSIDE', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/broadside-border-copy-high.jpg' },
+	  { id: 'photo-03', title: 'BRONCO', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/bronco-border-high-v5rlqx.jpg' },
+	  { id: 'photo-04', title: 'CPTTG', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/cpttg-border-high-8pbafm.jpg' },	  
+	  { id: 'photo-05', title: 'CRASH', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/crash-copy-high.jpg' },
+	  { id: 'photo-06', title: 'DEATH LOOMS', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/death-looms-border-high-iiup0b.jpg' },	  
+	  { id: 'photo-07', title: 'DRIVE-BY', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/drive-by-border-high.jpg' },	  
+	  { id: 'photo-08', title: 'FERN GULLY', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/fern-gully-border-high-hemos3.jpg' },	  
+	  { id: 'photo-09', title: 'FOUR WAY', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/four-way-border-high-swnbwc.jpg' },	  
+	  { id: 'photo-10', title: 'GOLDTOP', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/goldtop-border-high.jpg' },	  
+	  { id: 'photo-11', title: 'HYDRO', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/hydro-border-high-xvspd0.jpg' },	  
+	  { id: 'photo-12', title: 'ISLAND IN THE SUN', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/island-in-the-sun-border-high-bhqr9a.jpg' },	  
+	  { id: 'photo-13', title: 'KILLKARE (Color)', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/killkare-border-high.jpg' },	  
+	  { id: 'photo-14', title: 'KILLKARE (B&W)', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/killkare-bw-border-high-5yl3mr.jpg' },	  
+	  { id: 'photo-15', title: 'MOULT', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/moult-border-high.jpg' },	  
+	  { id: 'photo-16', title: 'OLD GROWTH', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/old-growth-border-high.jpg' },	  
+	  { id: 'photo-17', title: 'ON CALL', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/on-call-border-high-2q1f2k.jpg' },	  
+	  { id: 'photo-18', title: 'PAD THAI', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/pad-thai-border-high-h9xvvb.jpg' },	  
+	  { id: 'photo-19', title: 'PEACE', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/peace-high.jpg' },	  
+	  { id: 'photo-20', title: 'PUBLIC WORKS', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/public-works-high.jpg' },	  
+	  { id: 'photo-21', title: 'SHELTER', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/shelter-high.jpg' },	  
+	  { id: 'photo-22', title: 'SUNNIE', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/sunnie-high-rj5fho.jpg' },	  
+	  { id: 'photo-23', title: 'SUPA', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/supa-high.jpg' },	  
+	  { id: 'photo-24', title: 'TOPSIDE', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/topside-high.jpg' },	  
+	  { id: 'photo-25', title: 'WHERE THE BUFFALO ROAM', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/where-the-buffalo-roam-border-2-high-a9qg85.jpg' },
+	  { id: 'photo-26', title: 'TORCH', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/torch-high-03sp4w.jpg' },	  
+    ];
+
+    // ─────────────────────────────────────────────
+    // Core logic — no edits needed below this line
+    // ─────────────────────────────────────────────
+
+    const HEADERS = {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    };
+
+    function getVoterId() {
+      let id = localStorage.getItem('nss_voter_id');
+      if (!id) {
+        id = 'v_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        localStorage.setItem('nss_voter_id', id);
+      }
+      return id;
+    }
+
+    function getPriorVotes() {
+      try { return JSON.parse(localStorage.getItem('nss_votes') || '{}'); }
+      catch { return {}; }
+    }
+
+    function savePriorVote(imageId, rating) {
+      const v = getPriorVotes();
+      v[imageId] = rating;
+      localStorage.setItem('nss_votes', JSON.stringify(v));
+    }
+
+    async function submitVote(imageId, rating, statusEl, avgEl) {
+      const voterId = getVoterId();
+      statusEl.textContent = 'Saving…';
+      statusEl.className = 'vote-status';
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/votes`, {
+          method: 'POST',
+          headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+          body: JSON.stringify({ image_id: imageId, rating, voter_id: voterId })
+        });
+
+        if (!res.ok) throw new Error(await res.text());
+
+        savePriorVote(imageId, rating);
+        statusEl.textContent = 'Vote saved!';
+        statusEl.className = 'vote-status success';
+        setTimeout(() => { statusEl.textContent = ''; }, 2500);
+        fetchAverage(imageId, avgEl);
+
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = 'Error saving — try again';
+        statusEl.className = 'vote-status error';
+      }
+    }
+
+    async function fetchAverage(imageId, avgEl) {
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/votes?image_id=eq.${imageId}&select=rating`,
+          { headers: HEADERS }
+        );
+        const rows = await res.json();
+        if (!rows.length) { avgEl.textContent = ''; return; }
+        const avg = rows.reduce((s, r) => s + r.rating, 0) / rows.length;
+        avgEl.textContent = `${avg.toFixed(1)} avg from ${rows.length} vote${rows.length === 1 ? '' : 's'}`;
+      } catch { avgEl.textContent = ''; }
+    }
+
+    function buildCard(img, priorVotes) {
+      const prior = priorVotes[img.id] || 0;
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const image = document.createElement('img');
+      image.src = img.url;
+      image.alt = img.title;
+      image.loading = 'lazy';
+
+      const body = document.createElement('div');
+      body.className = 'card-body';
+
+      const title = document.createElement('div');
+      title.className = 'card-title';
+      title.textContent = img.title;
+
+      const stars = document.createElement('div');
+      stars.className = 'stars';
+
+      const status = document.createElement('div');
+      status.className = 'vote-status';
+
+      const avgDisplay = document.createElement('div');
+      avgDisplay.className = 'avg-display';
+
+      for (let i = 1; i <= 5; i++) {
+        const star = document.createElement('span');
+        star.className = 'star' + (i <= prior ? ' filled' : '');
+        star.textContent = '★';
+        star.dataset.value = i;
+
+        star.addEventListener('mouseover', () => {
+          stars.querySelectorAll('.star').forEach((s, idx) => {
+            s.classList.toggle('filled', idx < i);
+          });
+        });
+
+        star.addEventListener('mouseout', () => {
+          const current = parseInt(stars.dataset.selected || 0);
+          stars.querySelectorAll('.star').forEach((s, idx) => {
+            s.classList.toggle('filled', idx < current);
+          });
+        });
+
+        star.addEventListener('click', () => {
+          stars.dataset.selected = i;
+          stars.querySelectorAll('.star').forEach((s, idx) => {
+            s.classList.toggle('filled', idx < i);
+          });
+          submitVote(img.id, i, status, avgDisplay);
+        });
+
+        stars.appendChild(star);
+      }
+
+      stars.dataset.selected = prior;
+
+      body.appendChild(title);
+      body.appendChild(stars);
+      body.appendChild(status);
+      body.appendChild(avgDisplay);
+      card.appendChild(image);
+      card.appendChild(body);
+
+      fetchAverage(img.id, avgDisplay);
+      return card;
+    }
+
+    async function toggleResults() {
+      const panel = document.getElementById('results-panel');
+      const btn = document.querySelector('.results-link');
+      if (panel.style.display === 'block') {
+        panel.style.display = 'none';
+        btn.textContent = 'Show current results';
+        return;
+      }
+      btn.textContent = 'Hide results';
+      panel.style.display = 'block';
+      await loadResults();
+    }
+
+    async function loadResults() {
+      const list = document.getElementById('results-list');
+      list.textContent = 'Loading…';
+
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/votes?select=image_id,rating`,
+          { headers: HEADERS }
+        );
+        const rows = await res.json();
+
+        const byImage = {};
+        rows.forEach(r => {
+          if (!byImage[r.image_id]) byImage[r.image_id] = [];
+          byImage[r.image_id].push(r.rating);
+        });
+
+        const scored = IMAGES.map(img => {
+          const ratings = byImage[img.id] || [];
+          const avg = ratings.length
+            ? ratings.reduce((s, r) => s + r, 0) / ratings.length
+            : 0;
+          return { title: img.title, avg, count: ratings.length };
+        }).sort((a, b) => b.avg - a.avg);
+
+        const maxAvg = scored[0]?.avg || 1;
+        list.innerHTML = '';
+        scored.forEach(item => {
+          const row = document.createElement('div');
+          row.className = 'result-row';
+          row.innerHTML = `
+            <div class="result-label" title="${item.title}">${item.title}</div>
+            <div class="result-bar-wrap">
+              <div class="result-bar" style="width:${(item.avg / maxAvg) * 100}%"></div>
+            </div>
+            <div class="result-score">${item.count ? item.avg.toFixed(1) : '—'}</div>
+          `;
+          list.appendChild(row);
+        });
+
+      } catch {
+        list.textContent = 'Could not load results.';
+      }
+    }
+
+    // Initialise
+    const grid = document.getElementById('grid');
+    const priorVotes = getPriorVotes();
+    IMAGES.forEach(img => grid.appendChild(buildCard(img, priorVotes)));
+  </script>
+</body>
+</html>
