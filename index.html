@@ -45,7 +45,6 @@
       aspect-ratio: 4/3;
       object-fit: cover;
       display: block;
-      cursor: zoom-in;
     }
 
     .card-body {
@@ -158,63 +157,6 @@
       font-weight: 500;
       color: #ccc;
     }
-
-    /* Lightbox overlay — rendered inside the iframe document, not fixed to browser window */
-    #lightbox {
-      display: none;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      min-height: 100%;
-      background: rgba(0,0,0,0.97);
-      z-index: 1000;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 60px 16px 60px;
-    }
-
-    #lightbox.active {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    #lightbox img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 4px;
-      display: block;
-    }
-
-    #lightbox-title {
-      margin-top: 16px;
-      color: #ccc;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 13px;
-      letter-spacing: 0.05em;
-      text-align: center;
-    }
-
-    #lightbox-close {
-      position: fixed;
-      top: 20px;
-      right: 28px;
-      color: #fff;
-      font-size: 36px;
-      cursor: pointer;
-      line-height: 1;
-      user-select: none;
-      z-index: 1001;
-    }
-
-    #lightbox-hint {
-      margin-top: 12px;
-      color: #555;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 11px;
-      text-align: center;
-    }
   </style>
 </head>
 <body>
@@ -231,45 +173,46 @@
     <div id="results-list"></div>
   </div>
 
-  <div id="lightbox" onclick="handleLightboxClick(event)">
-    <span id="lightbox-close" onclick="closeLightbox()">&times;</span>
-    <img id="lightbox-img" src="" alt="">
-    <div id="lightbox-title"></div>
-    <div id="lightbox-hint">tap or click anywhere to close</div>
-  </div>
-
   <script>
-    const SUPABASE_URL = 'https://doqpuzbedngssndywfrw.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_H7iaUFgNudohTcpvoGD2AQ_9nS49sJo';
+    // ─────────────────────────────────────────────
+    // CONFIGURATION — fill these in before uploading
+    // ─────────────────────────────────────────────
+
+    const SUPABASE_URL = 'https://doqpuzbedngssndywfrw.supabase.co';   // from Supabase → Project Settings → API
+    const SUPABASE_ANON_KEY = 'sb_publishable_H7iaUFgNudohTcpvoGD2AQ_9nS49sJo';                 // from Supabase → Project Settings → API
 
     const IMAGES = [
       { id: 'photo-01', title: 'AUTUMN', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/autumn-border-high-2f5qyo.jpg' },
       { id: 'photo-02', title: 'BROADSIDE', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/broadside-border-copy-high.jpg' },
-      { id: 'photo-03', title: 'BRONCO', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/bronco-border-high-v5rlqx.jpg' },
-      { id: 'photo-04', title: 'CPTTG', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/cpttg-border-high-8pbafm.jpg' },
-      { id: 'photo-05', title: 'CRASH', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/crash-copy-high.jpg' },
-      { id: 'photo-06', title: 'DEATH LOOMS', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/death-looms-border-high-iiup0b.jpg' },
-      { id: 'photo-07', title: 'DRIVE-BY', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/drive-by-border-high.jpg' },
-      { id: 'photo-08', title: 'FERN GULLY', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/fern-gully-border-high-hemos3.jpg' },
-      { id: 'photo-09', title: 'FOUR WAY', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/four-way-border-high-swnbwc.jpg' },
-      { id: 'photo-10', title: 'GOLDTOP', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/goldtop-border-high.jpg' },
-      { id: 'photo-11', title: 'HYDRO', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/hydro-border-high-xvspd0.jpg' },
-      { id: 'photo-12', title: 'ISLAND IN THE SUN', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/island-in-the-sun-border-high-bhqr9a.jpg' },
-      { id: 'photo-13', title: 'KILLKARE (Color)', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/killkare-border-high.jpg' },
-      { id: 'photo-14', title: 'KILLKARE (B&W)', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/killkare-bw-border-high-5yl3mr.jpg' },
-      { id: 'photo-15', title: 'MOULT', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/moult-border-high.jpg' },
-      { id: 'photo-16', title: 'OLD GROWTH', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/old-growth-border-high.jpg' },
-      { id: 'photo-17', title: 'ON CALL', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/on-call-border-high-2q1f2k.jpg' },
-      { id: 'photo-18', title: 'PAD THAI', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/pad-thai-border-high-h9xvvb.jpg' },
-      { id: 'photo-19', title: 'PEACE', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/peace-high.jpg' },
-      { id: 'photo-20', title: 'PUBLIC WORKS', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/public-works-high.jpg' },
-      { id: 'photo-21', title: 'SHELTER', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/shelter-high.jpg' },
-      { id: 'photo-22', title: 'SUNNIE', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/sunnie-high-rj5fho.jpg' },
-      { id: 'photo-23', title: 'SUPA', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/supa-high.jpg' },
-      { id: 'photo-24', title: 'TOPSIDE', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/topside-high.jpg' },
-      { id: 'photo-25', title: 'WHERE THE BUFFALO ROAM', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/where-the-buffalo-roam-border-2-high-a9qg85.jpg' },
-      { id: 'photo-26', title: 'TORCH', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/torch-high-03sp4w.jpg' },
+	  { id: 'photo-03', title: 'BRONCO', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/bronco-border-high-v5rlqx.jpg' },
+	  { id: 'photo-04', title: 'CPTTG', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/cpttg-border-high-8pbafm.jpg' },	  
+	  { id: 'photo-05', title: 'CRASH', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/crash-copy-high.jpg' },
+	  { id: 'photo-06', title: 'DEATH LOOMS', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/death-looms-border-high-iiup0b.jpg' },	  
+	  { id: 'photo-07', title: 'DRIVE-BY', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/drive-by-border-high.jpg' },	  
+	  { id: 'photo-08', title: 'FERN GULLY', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/fern-gully-border-high-hemos3.jpg' },	  
+	  { id: 'photo-09', title: 'FOUR WAY', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/four-way-border-high-swnbwc.jpg' },	  
+	  { id: 'photo-10', title: 'GOLDTOP', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/goldtop-border-high.jpg' },	  
+	  { id: 'photo-11', title: 'HYDRO', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/hydro-border-high-xvspd0.jpg' },	  
+	  { id: 'photo-12', title: 'ISLAND IN THE SUN', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/island-in-the-sun-border-high-bhqr9a.jpg' },	  
+	  { id: 'photo-13', title: 'KILLKARE (Color)', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/killkare-border-high.jpg' },	  
+	  { id: 'photo-14', title: 'KILLKARE (B&W)', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/killkare-bw-border-high-5yl3mr.jpg' },	  
+	  { id: 'photo-15', title: 'MOULT', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/moult-border-high.jpg' },	  
+	  { id: 'photo-16', title: 'OLD GROWTH', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/old-growth-border-high.jpg' },	  
+	  { id: 'photo-17', title: 'ON CALL', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/on-call-border-high-2q1f2k.jpg' },	  
+	  { id: 'photo-18', title: 'PAD THAI', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/pad-thai-border-high-h9xvvb.jpg' },	  
+	  { id: 'photo-19', title: 'PEACE', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/peace-high.jpg' },	  
+	  { id: 'photo-20', title: 'PUBLIC WORKS', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/public-works-high.jpg' },	  
+	  { id: 'photo-21', title: 'SHELTER', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/shelter-high.jpg' },	  
+	  { id: 'photo-22', title: 'SUNNIE', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/sunnie-high-rj5fho.jpg' },	  
+	  { id: 'photo-23', title: 'SUPA', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/supa-high.jpg' },	  
+	  { id: 'photo-24', title: 'TOPSIDE', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/topside-high.jpg' },	  
+	  { id: 'photo-25', title: 'WHERE THE BUFFALO ROAM', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/where-the-buffalo-roam-border-2-high-a9qg85.jpg' },
+	  { id: 'photo-26', title: 'TORCH', url: 'https://primary.jwwb.nl/public/y/d/p/temp-oxphtlkgoydabzwnmzsj/torch-high-03sp4w.jpg' },	  
     ];
+
+    // ─────────────────────────────────────────────
+    // Core logic — no edits needed below this line
+    // ─────────────────────────────────────────────
 
     const HEADERS = {
       'apikey': SUPABASE_ANON_KEY,
@@ -302,18 +245,22 @@
       const voterId = getVoterId();
       statusEl.textContent = 'Saving…';
       statusEl.className = 'vote-status';
+
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/votes`, {
           method: 'POST',
           headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
           body: JSON.stringify({ image_id: imageId, rating, voter_id: voterId })
         });
+
         if (!res.ok) throw new Error(await res.text());
+
         savePriorVote(imageId, rating);
         statusEl.textContent = 'Vote saved!';
         statusEl.className = 'vote-status success';
         setTimeout(() => { statusEl.textContent = ''; }, 2500);
         fetchAverage(imageId, avgEl);
+
       } catch (err) {
         console.error(err);
         statusEl.textContent = 'Error saving — try again';
@@ -334,32 +281,6 @@
       } catch { avgEl.textContent = ''; }
     }
 
-    function openLightbox(url, alt) {
-      document.getElementById('lightbox-img').src = url;
-      document.getElementById('lightbox-img').alt = alt;
-      document.getElementById('lightbox-title').textContent = alt;
-      const lb = document.getElementById('lightbox');
-      lb.classList.add('active');
-      lb.scrollTop = 0;
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeLightbox() {
-      document.getElementById('lightbox').classList.remove('active');
-      document.body.style.overflow = '';
-    }
-
-    function handleLightboxClick(e) {
-      if (e.target === document.getElementById('lightbox') ||
-          e.target === document.getElementById('lightbox-hint')) {
-        closeLightbox();
-      }
-    }
-
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') closeLightbox();
-    });
-
     function buildCard(img, priorVotes) {
       const prior = priorVotes[img.id] || 0;
       const card = document.createElement('div');
@@ -369,7 +290,6 @@
       image.src = img.url;
       image.alt = img.title;
       image.loading = 'lazy';
-      image.onclick = () => openLightbox(img.url, img.title);
 
       const body = document.createElement('div');
       body.className = 'card-body';
@@ -446,17 +366,20 @@
     async function loadResults() {
       const list = document.getElementById('results-list');
       list.textContent = 'Loading…';
+
       try {
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/votes?select=image_id,rating`,
           { headers: HEADERS }
         );
         const rows = await res.json();
+
         const byImage = {};
         rows.forEach(r => {
           if (!byImage[r.image_id]) byImage[r.image_id] = [];
           byImage[r.image_id].push(r.rating);
         });
+
         const scored = IMAGES.map(img => {
           const ratings = byImage[img.id] || [];
           const avg = ratings.length
@@ -464,6 +387,7 @@
             : 0;
           return { title: img.title, avg, count: ratings.length };
         }).sort((a, b) => b.avg - a.avg);
+
         const maxAvg = scored[0]?.avg || 1;
         list.innerHTML = '';
         scored.forEach(item => {
@@ -478,6 +402,7 @@
           `;
           list.appendChild(row);
         });
+
       } catch {
         list.textContent = 'Could not load results.';
       }
